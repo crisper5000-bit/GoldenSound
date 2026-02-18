@@ -1,0 +1,220 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  SELLER
+  ADMIN
+}
+
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TrackStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum ModerationType {
+  TRACK_CREATE
+  TRACK_UPDATE
+  TRACK_DELETE
+  REVIEW
+}
+
+model User {
+  id                         String                   @id @default(cuid())
+  email                      String                   @unique
+  passwordHash               String
+  username                   String
+  avatarUrl                  String?
+  role                       UserRole                 @default(USER)
+  isBlocked                  Boolean                  @default(false)
+  createdAt                  DateTime                 @default(now())
+  updatedAt                  DateTime                 @updatedAt
+  tracks                     Track[]                  @relation("SellerTracks")
+  reviews                    TrackReview[]            @relation("AuthorReviews")
+  moderatedReviews           TrackReview[]            @relation("ReviewModerator")
+  cartItems                  CartItem[]
+  orders                     Order[]
+  libraryItems               LibraryItem[]
+  playlists                  Playlist[]
+  createdModerationRequests  TrackModerationRequest[] @relation("SellerModerationRequests")
+  handledModerationRequests  TrackModerationRequest[] @relation("AdminModerationRequests")
+  notifications              Notification[]
+  activityLogs               ActivityLog[]
+}
+
+model Genre {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  tracks    Track[]
+}
+
+model Track {
+  id                 String                   @id @default(cuid())
+  title              String
+  description        String
+  authorName         String
+  price              Decimal                  @db.Decimal(10, 2)
+  mediaUrl           String
+  coverUrl           String?
+  status             TrackStatus              @default(PENDING)
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  publishedAt        DateTime?
+  sellerId           String
+  genreId            String
+  seller             User                     @relation("SellerTracks", fields: [sellerId], references: [id])
+  genre              Genre                    @relation(fields: [genreId], references: [id])
+  reviews            TrackReview[]
+  cartItems          CartItem[]
+  orderItems         OrderItem[]
+  libraryItems       LibraryItem[]
+  playlistTracks     PlaylistTrack[]
+  moderationRequests TrackModerationRequest[]
+
+  @@index([status, createdAt])
+  @@index([genreId])
+  @@index([sellerId])
+}
+
+model TrackReview {
+  id             String           @id @default(cuid())
+  rating         Int
+  comment        String
+  status         ModerationStatus @default(PENDING)
+  moderationNote String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  trackId        String
+  userId         String
+  moderatedById  String?
+  track          Track            @relation(fields: [trackId], references: [id])
+  user           User             @relation("AuthorReviews", fields: [userId], references: [id])
+  moderatedBy    User?            @relation("ReviewModerator", fields: [moderatedById], references: [id])
+
+  @@unique([trackId, userId])
+  @@index([status])
+}
+
+model TrackModerationRequest {
+  id          String           @id @default(cuid())
+  type        ModerationType
+  status      ModerationStatus @default(PENDING)
+  payload     Json
+  note        String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  trackId     String?
+  sellerId    String
+  moderatorId String?
+  track       Track?           @relation(fields: [trackId], references: [id])
+  seller      User             @relation("SellerModerationRequests", fields: [sellerId], references: [id])
+  moderator   User?            @relation("AdminModerationRequests", fields: [moderatorId], references: [id])
+
+  @@index([status, createdAt])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  trackId   String
+  user      User     @relation(fields: [userId], references: [id])
+  track     Track    @relation(fields: [trackId], references: [id])
+
+  @@unique([userId, trackId])
+}
+
+model Order {
+  id        String    @id @default(cuid())
+  total     Decimal   @db.Decimal(10, 2)
+  createdAt DateTime  @default(now())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  items     OrderItem[]
+}
+
+model OrderItem {
+  id      String  @id @default(cuid())
+  price   Decimal @db.Decimal(10, 2)
+  orderId String
+  trackId String
+  order   Order   @relation(fields: [orderId], references: [id])
+  track   Track   @relation(fields: [trackId], references: [id])
+
+  @@index([trackId])
+}
+
+model LibraryItem {
+  id          String   @id @default(cuid())
+  purchasedAt DateTime @default(now())
+  userId      String
+  trackId     String
+  sourceOrder String
+  user        User     @relation(fields: [userId], references: [id])
+  track       Track    @relation(fields: [trackId], references: [id])
+
+  @@unique([userId, trackId])
+  @@index([sourceOrder])
+}
+
+model Playlist {
+  id          String          @id @default(cuid())
+  name        String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  playlistMap PlaylistTrack[]
+}
+
+model PlaylistTrack {
+  id         String   @id @default(cuid())
+  addedAt    DateTime @default(now())
+  playlistId String
+  trackId    String
+  playlist   Playlist @relation(fields: [playlistId], references: [id])
+  track      Track    @relation(fields: [trackId], references: [id])
+
+  @@unique([playlistId, trackId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  message   String
+  isRead    Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  action     String
+  entityType String
+  entityId   String?
+  details    Json?
+  createdAt  DateTime @default(now())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([entityType])
+}

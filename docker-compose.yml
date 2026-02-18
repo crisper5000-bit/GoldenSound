@@ -1,0 +1,75 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: goldensound_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: goldensound
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d goldensound"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: goldensound_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+    container_name: goldensound_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: 8080
+      NODE_ENV: development
+      JWT_SECRET: super_secret_key_for_demo_only
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/goldensound?schema=public
+      REDIS_URL: redis://redis:6379
+      UPLOAD_DIR: uploads
+      CLIENT_URL: http://localhost:5173
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run prisma:generate && npm run prisma:push && npm run prisma:seed && npm run dev"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: goldensound_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: http://localhost:8080/api
+      VITE_WS_URL: ws://localhost:8080/ws
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+
+volumes:
+  postgres_data:
