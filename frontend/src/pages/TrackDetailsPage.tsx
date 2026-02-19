@@ -26,10 +26,17 @@ export function TrackDetailsPage() {
       setLoading(true);
       setError(null);
       try {
-        const response = await apiRequest<{ track: TrackDetails }>(`/catalog/tracks/${trackId}`);
+        const response = await apiRequest<{ track: TrackDetails }>(
+          `/catalog/tracks/${trackId}`,
+        );
         setTrack(response.track);
+        console.log(track);
       } catch (requestError) {
-        setError(requestError instanceof Error ? requestError.message : "Ошибка загрузки");
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Ошибка загрузки",
+        );
       } finally {
         setLoading(false);
       }
@@ -48,12 +55,16 @@ export function TrackDetailsPage() {
       await apiRequest(`/catalog/tracks/${trackId}/reviews`, {
         method: "POST",
         token,
-        body: { rating, comment }
+        body: { rating, comment },
       });
       setComment("");
       alert("Отзыв отправлен на модерацию");
     } catch (requestError) {
-      alert(requestError instanceof Error ? requestError.message : "Ошибка отправки отзыва");
+      alert(
+        requestError instanceof Error
+          ? requestError.message
+          : "Ошибка отправки отзыва",
+      );
     }
   };
 
@@ -62,23 +73,33 @@ export function TrackDetailsPage() {
   }
 
   if (error || !track) {
-    return <div className="state state--error">{error ?? "Трек не найден"}</div>;
+    return (
+      <div className="state state--error">{error ?? "Трек не найден"}</div>
+    );
   }
 
   return (
     <section className="panel details">
       <div className="details__hero">
         <img
-          src={track.coverUrl ? `${apiBaseUrl}${track.coverUrl}` : "https://placehold.co/540x320?text=GoldenSound"}
+          src={
+            track.coverUrl
+              ? `${apiBaseUrl}${track.coverUrl}`
+              : "https://placehold.co/540x320?text=GoldenSound"
+          }
           alt={track.title}
         />
         <div>
           <h1>{track.title}</h1>
           <p className="muted">Автор: {track.authorName}</p>
           <p className="muted">Жанр: {track.genre.name}</p>
-          <p className="muted">Дата добавления: {new Date(track.createdAt).toLocaleString()}</p>
+          <p className="muted">
+            Дата добавления: {new Date(track.createdAt).toLocaleString()}
+          </p>
           <p>{track.description}</p>
-          <p className="details__price">{track.price.toFixed(2)} {"\u20BD"}</p>
+          <p className="details__price">
+            {track.price.toFixed(2)} {"BYN"}
+          </p>
           <p>
             Средняя оценка: {STAR} {track.averageRating.toFixed(1)}
           </p>
@@ -90,13 +111,17 @@ export function TrackDetailsPage() {
                 title: track.title,
                 authorName: track.authorName,
                 price: track.price,
-                coverUrl: track.coverUrl
+                coverUrl: track.coverUrl,
               })
             }
           >
             Добавить в корзину
           </button>
-          <audio controls className="audio-player" src={`${apiBaseUrl}${track.mediaUrl}`} />
+          <audio
+            controls
+            className="audio-player"
+            src={`${apiBaseUrl}${track.mediaUrl}`}
+          />
         </div>
       </div>
 
@@ -105,7 +130,11 @@ export function TrackDetailsPage() {
         <div className="review-form">
           <label>
             Оценка
-            <select className="input" value={rating} onChange={(event) => setRating(Number(event.target.value))}>
+            <select
+              className="input"
+              value={rating}
+              onChange={(event) => setRating(Number(event.target.value))}
+            >
               {[5, 4, 3, 2, 1].map((value) => (
                 <option key={value} value={value}>
                   {STAR.repeat(value)}
@@ -115,7 +144,11 @@ export function TrackDetailsPage() {
           </label>
           <label>
             Комментарий
-            <textarea className="input" value={comment} onChange={(event) => setComment(event.target.value)} />
+            <textarea
+              className="input"
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+            />
           </label>
           <button className="btn" onClick={() => void submitReview()}>
             Отправить
@@ -125,12 +158,17 @@ export function TrackDetailsPage() {
 
       <section className="panel">
         <h2>Комментарии</h2>
-        {track.reviews.length === 0 && <p className="muted">Пока нет комментариев</p>}
+        {track.reviews.length === 0 && (
+          <p className="muted">Пока нет комментариев</p>
+        )}
         {track.reviews.map((review) => (
           <article className="review" key={review.id}>
             <div>
               <strong>{review.user.username}</strong>
-              <span className="muted"> {new Date(review.createdAt).toLocaleString()}</span>
+              <span className="muted">
+                {" "}
+                {new Date(review.createdAt).toLocaleString()}
+              </span>
             </div>
             <p>Оценка: {STAR.repeat(review.rating)}</p>
             <p>{review.comment}</p>
@@ -140,6 +178,3 @@ export function TrackDetailsPage() {
     </section>
   );
 }
-
-
-

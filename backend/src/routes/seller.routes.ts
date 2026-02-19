@@ -1,4 +1,3 @@
-import path from "node:path";
 import { ModerationStatus, ModerationType, TrackStatus, UserRole } from "@prisma/client";
 import { Router } from "express";
 import { z } from "zod";
@@ -9,6 +8,7 @@ import { logActivity } from "../services/activity.service.js";
 import { clearCatalogCache } from "../services/cache.service.js";
 import { notifyRole } from "../services/notification.service.js";
 import { HttpError } from "../utils/http-error.js";
+import { toUploadsUrl } from "../utils/uploads.js";
 import { formatZodError } from "../utils/validation.js";
 
 const createTrackSchema = z.object({
@@ -189,8 +189,8 @@ sellerRouter.post(
         authorName: parsed.data.authorName ?? req.authUser!.username,
         genreId: parsed.data.genreId,
         price: parsed.data.price,
-        mediaUrl: `/uploads/tracks/${path.basename(mediaFile.path)}`,
-        coverUrl: coverFile ? `/uploads/covers/${path.basename(coverFile.path)}` : null,
+        mediaUrl: toUploadsUrl(mediaFile.path),
+        coverUrl: coverFile ? toUploadsUrl(coverFile.path) : null,
         sellerId: req.authUser!.id,
         status: TrackStatus.PENDING
       }
@@ -281,8 +281,8 @@ sellerRouter.patch(
         sellerId: req.authUser!.id,
         payload: {
           ...parsed.data,
-          ...(mediaFile ? { mediaUrl: `/uploads/tracks/${path.basename(mediaFile.path)}` } : {}),
-          ...(coverFile ? { coverUrl: `/uploads/covers/${path.basename(coverFile.path)}` } : {})
+          ...(mediaFile ? { mediaUrl: toUploadsUrl(mediaFile.path) } : {}),
+          ...(coverFile ? { coverUrl: toUploadsUrl(coverFile.path) } : {})
         }
       }
     });

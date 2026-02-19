@@ -1,4 +1,3 @@
-import path from "node:path";
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../db/prisma.js";
@@ -8,6 +7,7 @@ import { validateBody } from "../middlewares/validate.js";
 import { logActivity } from "../services/activity.service.js";
 import { comparePassword, hashPassword } from "../utils/auth.js";
 import { HttpError } from "../utils/http-error.js";
+import { toUploadsUrl } from "../utils/uploads.js";
 import { formatZodError } from "../utils/validation.js";
 
 const profileSchema = z.object({
@@ -45,7 +45,7 @@ usersRouter.patch("/profile", upload.single("avatar"), async (req, res) => {
     throw new HttpError(400, formatZodError(parsed.error));
   }
 
-  const avatarUrl = req.file ? `/uploads/avatars/${path.basename(req.file.path)}` : undefined;
+  const avatarUrl = req.file ? toUploadsUrl(req.file.path) : undefined;
 
   const user = await prisma.user.update({
     where: { id: req.authUser!.id },
