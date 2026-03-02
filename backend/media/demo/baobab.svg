@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1f2937"/>
+      <stop offset="100%" stop-color="#0b7285"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#g)"/>
+  <rect x="0" y="250" width="640" height="110" fill="#1f2937" opacity="0.8"/>
+  <rect x="290" y="130" width="60" height="160" fill="#92400e"/>
+  <circle cx="320" cy="110" r="90" fill="#16a34a"/>
+  <text x="48" y="56" fill="#f8fafc" font-family="Verdana" font-size="24" letter-spacing="2">BAOBAB</text>
+</svg>

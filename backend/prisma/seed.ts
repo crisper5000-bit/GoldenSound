@@ -59,8 +59,8 @@ async function main() {
       description: "Жизнеутверждающий трек папочки окси",
       authorName: "Demo Seller",
       price: "3.99",
-      mediaUrl: "/media/demo/окси.mp3",
-      coverUrl: "/media/demo/город.jpg",
+      mediaUrl: "/uploads/tracks/Oxxxymiron - Город Под Подошвой.mp3",
+      coverUrl: "/media/demo/gorod.svg",
       genreId: genres[3].id
     },
     {
@@ -68,8 +68,8 @@ async function main() {
       description: "Лучший трек ивана золкина",
       authorName: "Demo Seller",
       price: "4.49",
-      mediaUrl: "/media/demo/guitar-horizon.mp3",
-      coverUrl: "/media/demo/баобаб.jpg",
+      mediaUrl: "/uploads/tracks/ivanzolo2004 - Баобаб.mp3",
+      coverUrl: "/media/demo/baobab.svg",
       genreId: genres[4].id
     },
     {
@@ -77,8 +77,8 @@ async function main() {
       description: "Классика от Александра Пистолетова",
       authorName: "Demo Seller",
       price: "2.99",
-      mediaUrl: "/media/demo/midnight-coffee.mp3",
-      coverUrl: "/media/demo/Александр.jpg",
+      mediaUrl: "/uploads/tracks/Лёва_&_Александр_Пистолетов_Я_ПИРАТ.mp3",
+      coverUrl: "/media/demo/alexander.svg",
       genreId: genres[1].id
     }
   ];
@@ -100,7 +100,16 @@ async function main() {
           publishedAt: new Date()
         }
       });
+      continue;
     }
+
+    await prisma.track.update({
+      where: { id: existing.id },
+      data: {
+        mediaUrl: track.mediaUrl,
+        coverUrl: track.coverUrl
+      }
+    });
   }
 }
 

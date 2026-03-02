@@ -10,7 +10,14 @@ const schema = z.object({
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),
   UPLOAD_DIR: z.string().default("uploads"),
-  CLIENT_URL: z.string().url()
+  CLIENT_ORIGINS: z.string().default("http://localhost:5173"),
 });
 
-export const env = schema.parse(process.env);
+const rawEnv = schema.parse(process.env);
+const clientOrigins = rawEnv.CLIENT_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean);
+const validatedOrigins = z.array(z.string().url()).parse(clientOrigins);
+
+export const env = {
+  ...rawEnv,
+  CLIENT_ORIGINS: validatedOrigins,
+};

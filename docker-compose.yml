@@ -46,7 +46,7 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/goldensound?schema=public
       REDIS_URL: redis://redis:6379
       UPLOAD_DIR: uploads
-      CLIENT_URL: http://localhost:5173
+      CLIENT_ORIGINS: http://localhost:5173,http://localhost:5174
     ports:
       - "8080:8080"
     volumes:
